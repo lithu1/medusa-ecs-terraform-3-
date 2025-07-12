@@ -1,6 +1,6 @@
 name: Deploy Medusa Backend
 
-on:
+on: 
   push: 
     branches: [ main ]
 
