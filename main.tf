@@ -2,7 +2,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-# VPC and Subnet
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -52,17 +51,14 @@ resource "aws_security_group" "ecs_sg" {
   }
 }
 
-# ECS Cluster
 resource "aws_ecs_cluster" "cluster" {
   name = "medusa-cluster"
 }
 
-# Use existing IAM role
 data "aws_iam_role" "ecs_task_execution" {
   name = "ecsTaskExecutionRole"
 }
 
-# Task Definition
 resource "aws_ecs_task_definition" "medusa_task" {
   family                   = "medusa-task"
   requires_compatibilities = ["FARGATE"]
@@ -73,14 +69,16 @@ resource "aws_ecs_task_definition" "medusa_task" {
 
   container_definitions = jsonencode([
     {
-      name      = "medusa"
-      image     = "ghcr.io/medusajs/medusa:v1.13.1"
-      portMappings = [{
-        containerPort = 9000
-      }]
+      name      = "medusa",
+      image     = "medusajs/medusa:v1.13.1",  # ✅ Docker Hub image
+      portMappings = [
+        {
+          containerPort = 9000
+        }
+      ],
       environment = [
         {
-          name  = "DATABASE_URL"
+          name  = "DATABASE_URL",
           value = "sqlite://./medusa-db.sqlite"
         }
       ]
@@ -88,7 +86,6 @@ resource "aws_ecs_task_definition" "medusa_task" {
   ])
 }
 
-# ECS Service
 resource "aws_ecs_service" "service" {
   name            = "medusa-service"
   cluster         = aws_ecs_cluster.cluster.id
@@ -102,5 +99,4 @@ resource "aws_ecs_service" "service" {
     assign_public_ip = true
   }
 }
-
 
