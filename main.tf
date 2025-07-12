@@ -2,6 +2,7 @@ provider "aws" {
   region = var.aws_region
 }
 
+# VPC and Subnet
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
@@ -51,23 +52,9 @@ resource "aws_ecs_cluster" "cluster" {
   name = "medusa-cluster"
 }
 
-resource "aws_iam_role" "ecs_task_execution" {
+# Use the existing IAM role instead of creating a new one
+data "aws_iam_role" "ecs_task_execution" {
   name = "ecsTaskExecutionRole"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_attach" {
-  role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_ecs_task_definition" "medusa_task" {
@@ -76,7 +63,7 @@ resource "aws_ecs_task_definition" "medusa_task" {
   network_mode             = "awsvpc"
   cpu                      = "512"
   memory                   = "1024"
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution.arn
 
   container_definitions = jsonencode([{
     name      = "medusa",
