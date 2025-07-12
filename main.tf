@@ -103,7 +103,4 @@ resource "aws_ecs_service" "service" {
   }
 }
 
-# Output
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.cluster.name
-}
+
